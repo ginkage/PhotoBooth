@@ -1,3 +1,10 @@
+#pragma once
+
+#include <iostream>
+#include <numeric>
+
+#include "tensorflow/lite/interpreter.h"
+
 template <class T>
 float confidence(T prediction) {
     return (float)prediction;
@@ -31,7 +38,7 @@ void get_top_n(const T* predictions, int predictions_size, std::vector<size_t> &
     }
 }
 
-inline void get_top_n(const tflite::Interpreter* interpreter, int output_type, int output_size,
+inline void get_top_n(const tflite::Interpreter* interpreter, TfLiteType output_type, int output_size,
         std::vector<size_t> &indexes, std::vector<std::pair<size_t, float>> &result) {
     switch (output_type) {
         case kTfLiteFloat32:
@@ -48,4 +55,3 @@ inline void get_top_n(const tflite::Interpreter* interpreter, int output_type, i
           exit(-1);
     }
 }
-

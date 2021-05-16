@@ -1,4 +1,4 @@
-#include "object_detection.h"
+#include "image_segment.h"
 #include "thread_sync.h"
 #include "fps.h"
 
@@ -27,7 +27,7 @@ void capture_thread() {
 }
 
 void process_thread() {
-    ObjectDetection object_detection;
+    ImageSegment model;
     std::shared_ptr<cv::Mat> frame;
 
     while (!terminate) {
@@ -45,7 +45,7 @@ void process_thread() {
             [&] {
                 // Process the frame
                 if (!terminate && frame) {
-                    object_detection.detect_objects(frame);
+                    model.process_frame(frame);
                     display_sync.produce([&] { frame_to_display = frame; });
                 }
             });

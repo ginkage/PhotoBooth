@@ -1,9 +1,9 @@
-#include "object_detection.h"
+#include "object_detect.h"
 
 static constexpr char model_path[] = "./ssd_mobilenet_v2_coco_quant_postprocess_edgetpu.tflite";
 static constexpr char labels_path[] = "./coco_labels.txt";
 
-ObjectDetection::ObjectDetection() : TFLiteModel(model_path, labels_path) {
+ObjectDetect::ObjectDetect() : TFLiteModel(model_path, labels_path) {
     const std::vector<int> &outputs = interpreter->outputs();
     TfLiteTensor *boxes_tensor = interpreter->tensor(outputs[0]);
     TfLiteTensor *classes_tensor = interpreter->tensor(outputs[1]);
@@ -21,9 +21,7 @@ ObjectDetection::ObjectDetection() : TFLiteModel(model_path, labels_path) {
     count_data = interpreter->typed_output_tensor<float>(3);
 }
 
-void ObjectDetection::detect_objects(std::shared_ptr<cv::Mat> &frame) {
-    invoke(frame);
-
+void ObjectDetect::process_result(std::shared_ptr<cv::Mat> &frame) {
     float width = frame->size().width;
     float height = frame->size().height;
     cv::Scalar green(0, 255, 0);
@@ -43,4 +41,3 @@ void ObjectDetection::detect_objects(std::shared_ptr<cv::Mat> &frame) {
         }
     }
 }
-

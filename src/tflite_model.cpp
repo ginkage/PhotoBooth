@@ -58,12 +58,13 @@ TFLiteModel::TFLiteModel(const char *model_path, const char *labels_path) {
     input_image = cv::Mat(wanted_width, wanted_height, CV_8UC3, input_data);
 }
 
-void TFLiteModel::invoke(std::shared_ptr<cv::Mat> &frame) {
+void TFLiteModel::process_frame(std::shared_ptr<cv::Mat> &frame) {
     cv::resize(*frame, input_image, input_image.size());
     cv::cvtColor(input_image, input_image, cv::COLOR_BGR2RGB);
     if (interpreter->Invoke() != kTfLiteOk) {
         std::cerr << "Failed to invoke tflite!";
         exit(-1);
     }
-}
 
+    process_result(frame);
+}
