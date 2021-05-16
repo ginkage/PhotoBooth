@@ -13,4 +13,9 @@ private:
     int64_t* pixels;
     int output_width;
     int output_height;
+    size_t pixel_count;
+    cv::Mat mask;
+    cv::Mat big_mask;
+    cv::Vec3b colors[32];
 };
+
