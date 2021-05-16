@@ -15,7 +15,7 @@ ImageSegment::ImageSegment() : TFLiteModel(model_path, labels_path) {
 
     mask = cv::Mat(output_height, output_width, CV_8UC3);
 
-    for (int i = 1; i < labels.size(); ++i)
+    for (int i = 1; i < 256; ++i)
         for (int j = 0; j < 3; ++j)
             colors[i][j] = (colors[i - 1][j] + rand() % 256) / 2;
 
