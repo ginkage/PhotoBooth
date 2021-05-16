@@ -1,1 +1,4 @@
 photobooth
+.vscode/*
+.deps/*
+.objs/*

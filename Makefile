@@ -24,7 +24,6 @@ LD := g++
 
 CXXFLAGS := \
   -O3 \
-  -g \
   -std=c++17 \
   -I/usr/include/opencv4 \
   -I/home/ginkage/tensorflow \
