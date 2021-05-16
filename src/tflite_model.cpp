@@ -62,7 +62,9 @@ TFLiteModel::TFLiteModel(const char *model_path, const char *labels_path) {
     input_image = cv::Mat(wanted_width, wanted_height, CV_8UC3, input_data);
 }
 
+#ifdef PROFILE
 using hires_clock = std::chrono::high_resolution_clock;
+#endif
 
 void TFLiteModel::process_frame(std::shared_ptr<cv::Mat> &frame) {
 #ifdef PROFILE
