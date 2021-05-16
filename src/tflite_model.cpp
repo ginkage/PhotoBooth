@@ -1,5 +1,9 @@
 #include "tflite_model.h"
 
+#ifdef PROFILE
+#include <chrono>
+#endif
+
 #include <fstream>
 
 static std::vector<std::string> read_labels(const char *file_name) {
@@ -58,13 +62,34 @@ TFLiteModel::TFLiteModel(const char *model_path, const char *labels_path) {
     input_image = cv::Mat(wanted_width, wanted_height, CV_8UC3, input_data);
 }
 
+using hires_clock = std::chrono::high_resolution_clock;
+
 void TFLiteModel::process_frame(std::shared_ptr<cv::Mat> &frame) {
+#ifdef PROFILE
+    hires_clock::time_point start = hires_clock::now();
+#endif
+
     cv::resize(*frame, input_image, input_image.size());
     cv::cvtColor(input_image, input_image, cv::COLOR_BGR2RGB);
+
+#ifdef PROFILE
+    hires_clock::time_point middle = hires_clock::now();
+#endif
+
     if (interpreter->Invoke() != kTfLiteOk) {
         std::cerr << "Failed to invoke tflite!";
         exit(-1);
     }
+
+#ifdef PROFILE
+    hires_clock::time_point finish = hires_clock::now();
+    auto resize_duration
+        = std::chrono::duration_cast<std::chrono::nanoseconds>(middle - start).count();
+    auto invoke_duration
+        = std::chrono::duration_cast<std::chrono::nanoseconds>(finish - middle).count();
+    std::cout << "Resize: " << (resize_duration / 1000000) << " ms" << std::endl;
+    std::cout << "Invoke: " << (invoke_duration / 1000000) << " ms" << std::endl;
+#endif
 
     process_result(frame);
 }
