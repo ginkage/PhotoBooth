@@ -16,6 +16,6 @@ private:
     size_t pixel_count;
     cv::Mat mask;
     cv::Mat big_mask;
-    cv::Vec3b colors[32];
+    cv::Vec3b colors[256];
 };
 
