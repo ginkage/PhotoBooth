@@ -1,5 +1,7 @@
 #include "tflite_model.h"
 
+#include "tensorflow/lite/shared_library.h"
+
 #ifdef PROFILE
 #include <chrono>
 #endif
@@ -22,6 +24,22 @@ static std::vector<std::string> read_labels(const char *file_name) {
     return result;
 }
 
+bool ExternalLib::load(const char *lib_path) {
+    void* handle = tflite::SharedLibrary::LoadLibrary(lib_path);
+    if (handle == nullptr) {
+        std::cerr << "Unable to load external delegate from : " << lib_path << std::endl;
+    } else {
+        create =
+            reinterpret_cast<decltype(create)>(tflite::SharedLibrary::GetLibrarySymbol(
+                handle, "tflite_plugin_create_delegate"));
+        destroy =
+            reinterpret_cast<decltype(destroy)>(tflite::SharedLibrary::GetLibrarySymbol(
+                handle, "tflite_plugin_destroy_delegate"));
+        return create && destroy;
+    }
+    return false;
+}
+
 TFLiteModel::TFLiteModel(const char *model_path, const char *labels_path) {
     labels = read_labels(labels_path);
 
@@ -38,12 +56,46 @@ TFLiteModel::TFLiteModel(const char *model_path, const char *labels_path) {
         exit(-1);
     }
 
+    if (posenet_lib.load("posenet_decoder.so")) {
+        posenet_delegate = posenet_lib.create(nullptr, nullptr, 0, nullptr);
+        if (posenet_delegate != nullptr) {
+            interpreter->ModifyGraphWithDelegate(posenet_delegate);
+            std::cout << "PoseNet delegate added" << std::endl;
+        }
+    }
+
     // Bind given context with interpreter
     interpreter->SetExternalContext(kTfLiteEdgeTpuContext, context.get());
     interpreter->SetNumThreads(1);
     if (interpreter->AllocateTensors() != kTfLiteOk) {
         std::cerr << "Failed to allocate tensors." << std::endl;
         exit(-1);
+    }
+
+    const std::vector<int> &inputs = interpreter->inputs();
+    for (int input : inputs) {
+        TfLiteTensor *input_tensor = interpreter->tensor(input);
+        std::cout << "Input: " << input_tensor->name << " (type " << input_tensor->type << ") [";
+        TfLiteIntArray* input_dims = input_tensor->dims;
+        for (int i = 0; i < input_dims->size; ++i) {
+             if (i > 0)
+                 std::cout << ", ";
+             std::cout << input_tensor->dims->data[i];
+        }
+        std::cout << "]" << std::endl;
+    }
+
+    const std::vector<int> &outputs = interpreter->outputs();
+    for (int output : outputs) {
+        TfLiteTensor *output_tensor = interpreter->tensor(output);
+        std::cout << "Output: " << output_tensor->name << " (type " << output_tensor->type << ") [";
+        TfLiteIntArray* output_dims = output_tensor->dims;
+        for (int i = 0; i < output_dims->size; ++i) {
+             if (i > 0)
+                 std::cout << ", ";
+             std::cout << output_tensor->dims->data[i];
+        }
+        std::cout << "]" << std::endl;
     }
 
     // Get input dimension from the input tensor metadata, assuming one input only
@@ -60,6 +112,12 @@ TFLiteModel::TFLiteModel(const char *model_path, const char *labels_path) {
 
     uint8_t* input_data = interpreter->typed_input_tensor<uint8_t>(0);
     input_image = cv::Mat(wanted_width, wanted_height, CV_8UC3, input_data);
+}
+
+TFLiteModel::~TFLiteModel() {
+    if (posenet_delegate != nullptr) {
+        posenet_lib.destroy(posenet_delegate);
+    }
 }
 
 #ifdef PROFILE
