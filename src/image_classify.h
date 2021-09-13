@@ -7,7 +7,7 @@ public:
     ImageClassify();
 
 protected:
-    void process_result(std::shared_ptr<cv::Mat> &frame) override;
+    void process_result(std::shared_ptr<cv::Mat>& frame) override;
 
 private:
     float* scores;

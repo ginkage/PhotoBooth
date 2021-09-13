@@ -7,7 +7,7 @@ public:
     ImageSegment();
 
 protected:
-    void process_result(std::shared_ptr<cv::Mat> &frame) override;
+    void process_result(std::shared_ptr<cv::Mat>& frame) override;
 
 private:
     int64_t* pixels;
@@ -18,4 +18,3 @@ private:
     cv::Mat big_mask;
     cv::Vec3b colors[256];
 };
-

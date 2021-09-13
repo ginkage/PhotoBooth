@@ -14,10 +14,10 @@ public:
     ObjectDetect();
 
 protected:
-    void process_result(std::shared_ptr<cv::Mat> &frame) override;
+    void process_result(std::shared_ptr<cv::Mat>& frame) override;
 
 private:
-    box_coord *boxes_data;
+    box_coord* boxes_data;
     float* classes_data;
     float* scores_data;
     float* count_data;
